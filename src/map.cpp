@@ -153,6 +153,8 @@ DungeonMap::DungeonMap() : Map( 512, 512, 16 )
 	sf::IntRect spawnRect = makeSpawnRoom( 256, 256, 10, 10 );
 	
 	generateRooms( spawnRect, 10 );
+	generateRooms( spawnRect, 10 );
+	generateRooms( spawnRect, 10 );
 
 	drawTiles( mMapTexture, sf::Sprite( mFloorTexture ), TILE_FLOOR );
 	drawTiles( mMapTexture, sf::Sprite( mPlayerSpawnTexture ), TILE_PLAYER_SPAWN );
