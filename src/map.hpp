@@ -53,6 +53,7 @@ public:
 	size_t getHeight() { return mHeight; }
 	size_t getTileSize() { return mTileSize; }
 	sf::FloatRect getAABB() { return sf::FloatRect( sf::Vector2f( 0, 0 ), sf::Vector2f( mWidth * mTileSize, mHeight * mTileSize ) ); }
+	bool isSquareEmpty( size_t, size_t, size_t, size_t );
 
 protected:
 	sf::Uint8		*mMapData;
@@ -72,7 +73,7 @@ public:
 	sf::Vector2f getPlayerSpawn();
 
 private:
-	sf::IntRect generateRooms( sf::IntRect, size_t, int );
+	sf::IntRect generateRooms( sf::IntRect, size_t );
 	sf::IntRect makeSpawnRoom( size_t, size_t, size_t, size_t );
 	void makeHallway( int, size_t, size_t, size_t );
 

@@ -117,6 +117,25 @@ bool Map::collidesWithTile( sf::FloatRect other, size_t x, size_t y )
 	return tile.intersects( other );
 }
 
+//Return true if a given square is empty
+bool Map::isSquareEmpty( size_t x, size_t y, size_t w, size_t h )
+{
+	int i, j, ci, cj;
+	
+	for( i = x, ci = 0; ci < w; i++, ci++ )
+	{
+		for( j = y, cj = 0; cj < h; j++, cj++ )
+		{
+			if( getTile( i, j ) != TILE_NONE )
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
 DungeonMap::DungeonMap() : Map( 512, 512, 16 )
 {
 	gRanNumGen.seed( std::chrono::system_clock::now().time_since_epoch().count() );
@@ -131,7 +150,9 @@ DungeonMap::DungeonMap() : Map( 512, 512, 16 )
 		std::cout << "Error loading floor texture from res/basictiles.png!" << std::endl;
 	}
 
-	generateRooms( makeSpawnRoom( 256, 256, 10, 10 ), 7, DIRECTION_LEFT );
+	sf::IntRect spawnRect = makeSpawnRoom( 256, 256, 10, 10 );
+	
+	generateRooms( spawnRect, 10 );
 
 	drawTiles( mMapTexture, sf::Sprite( mFloorTexture ), TILE_FLOOR );
 	drawTiles( mMapTexture, sf::Sprite( mPlayerSpawnTexture ), TILE_PLAYER_SPAWN );
@@ -205,66 +226,75 @@ sf::Vector2f DungeonMap::getPlayerSpawn()
 	}
 }
 
-sf::IntRect DungeonMap::generateRooms( sf::IntRect start, size_t depth, int oldDir )
+sf::IntRect DungeonMap::generateRooms( sf::IntRect start, size_t depth )
 {
 	if( depth == 0 )
 	{
-		return sf::IntRect();
+		return start;
 	}
 
-	size_t	roomWidth  = 11;
-	size_t	roomHeight = 11;
+	size_t	roomWidth  = 20;
+	size_t	roomHeight = 20;
 	size_t	hallWidth  = 2;
-	size_t	hallLen	   = 10;
+	size_t	hallLen	   = 15;
 
 	sf::Vector2i roomStart;
 	sf::Vector2i hallStart;
+
+	size_t targetHallWidth;
+	size_t targetHallHeight;
 
 	std::uniform_int_distribution<int> dirRand( 0, 3 );
 
 	int direction = dirRand( gRanNumGen );
 
-	while( direction == oldDir )
-	{
-		direction = dirRand( gRanNumGen );
-	}
-
 	switch( direction )
 	{
 	case DIRECTION_RIGHT:
-		hallStart.x = start.left + start.width;
-		hallStart.y = start.top + ( start.height / 2 );
-		makeSquare( TILE_FLOOR, hallStart.x, hallStart.y, hallLen, hallWidth );
-		roomStart.x = hallStart.x + hallLen;
-		roomStart.y = start.top;
+		hallStart.x	 = start.left + start.width;
+		hallStart.y	 = start.top + ( start.height / 2 );
+		targetHallWidth	 = hallLen;
+		targetHallHeight = hallWidth;
+		roomStart.x	 = hallStart.x + hallLen;
+		roomStart.y	 = start.top;
 		break;
 
 	case DIRECTION_LEFT:
-		hallStart.x = start.left - hallLen;
-		hallStart.y = start.top + ( start.height / 2 );
-		makeSquare( TILE_FLOOR, hallStart.x, hallStart.y, hallLen, hallWidth );
-		roomStart.x = hallStart.x - hallLen;
-		roomStart.y = start.top;
+		hallStart.x	 = start.left - hallLen;
+		hallStart.y	 = start.top + ( start.height / 2 );
+		targetHallWidth	 = hallLen;
+		targetHallHeight = hallWidth;
+		roomStart.x	 = hallStart.x - roomWidth;
+		roomStart.y	 = start.top;
 		break;
 
 	case DIRECTION_UP:
-		hallStart.x = start.left + ( start.width / 2 );
-		hallStart.y = start.top - hallLen;
-		makeSquare( TILE_FLOOR, hallStart.x, hallStart.y, hallWidth, hallLen );
-		roomStart.x = start.left;
-		roomStart.y = hallStart.y - hallLen;
+		hallStart.x	 = start.left + ( start.width / 2 );
+		hallStart.y	 = start.top - hallLen;
+		targetHallWidth	 = hallWidth;
+		targetHallHeight = hallLen;		
+		roomStart.x	 = start.left;
+		roomStart.y	 = hallStart.y - roomHeight;
 		break;
 
 	case DIRECTION_DOWN:
-		hallStart.x = start.left + ( start.width / 2 );
-		hallStart.y = start.top + hallLen;
-		makeSquare( TILE_FLOOR, hallStart.x, hallStart.y, hallWidth, hallLen );
-		roomStart.x = start.left;
-		roomStart.y = hallStart.y + hallLen;
+		hallStart.x	 = start.left + ( start.width / 2 );
+		hallStart.y	 = start.top + start.width;
+		targetHallWidth	 = hallWidth;
+		targetHallHeight = hallLen;		
+		roomStart.x	 = start.left;
+		roomStart.y	 = hallStart.y + hallLen;
 		break;
 	}
 
+	if( !isSquareEmpty( hallStart.x, hallStart.y, targetHallWidth, targetHallHeight ) &&
+	    !isSquareEmpty( roomStart.x, roomStart.y, roomWidth, roomHeight ) )
+	{
+		return generateRooms( start, depth );
+	}
+
+	makeSquare( TILE_FLOOR, hallStart.x, hallStart.y, targetHallWidth, targetHallHeight );
 	makeSquare( TILE_FLOOR, roomStart.x, roomStart.y, roomWidth, roomHeight );
 
-	return generateRooms( sf::IntRect( roomStart, sf::Vector2i( roomWidth, roomHeight ) ), --depth, direction );
+	return generateRooms( sf::IntRect( roomStart, sf::Vector2i( roomWidth, roomHeight ) ), --depth );
 }
