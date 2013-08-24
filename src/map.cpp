@@ -28,10 +28,15 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 #include <iostream>
+#include <random>
+#include <chrono>
 #include <cstring>
 
 #include "entity.hpp"
 #include "map.hpp"
+
+//RNG
+std::mt19937 gRanNumGen;
 
 Map::Map( size_t w, size_t h, size_t ts )
 {
@@ -114,6 +119,8 @@ bool Map::collidesWithTile( sf::FloatRect other, size_t x, size_t y )
 
 DungeonMap::DungeonMap() : Map( 512, 512, 16 )
 {
+	gRanNumGen.seed( std::chrono::system_clock::now().time_since_epoch().count() );
+
 	if( !mFloorTexture.loadFromFile( "res/basictiles.png", sf::IntRect( 6 * 16, 1 * 16, 16, 16 ) ) )
 	{
 		std::cout << "Error loading floor texture from res/basictiles.png!" << std::endl;
@@ -124,7 +131,7 @@ DungeonMap::DungeonMap() : Map( 512, 512, 16 )
 		std::cout << "Error loading floor texture from res/basictiles.png!" << std::endl;
 	}
 
-	makeSpawnRoom( 256, 256, 40, 20 );
+	generateRooms( makeSpawnRoom( 256, 256, 10, 10 ), 7, DIRECTION_LEFT );
 
 	drawTiles( mMapTexture, sf::Sprite( mFloorTexture ), TILE_FLOOR );
 	drawTiles( mMapTexture, sf::Sprite( mPlayerSpawnTexture ), TILE_PLAYER_SPAWN );
@@ -136,11 +143,13 @@ sf::Sprite& DungeonMap::getSprite()
 	return mMapSprite;
 }
 
-void DungeonMap::makeSpawnRoom( size_t x, size_t y, size_t w, size_t h )
+sf::IntRect DungeonMap::makeSpawnRoom( size_t x, size_t y, size_t w, size_t h )
 {
 	makeSquare( TILE_FLOOR, x, y, w, h );
 	
 	getTile( x + ( w / 2 ), y + ( h / 2 ) ) = TILE_PLAYER_SPAWN; 
+
+	return sf::IntRect( x, y, w, h );
 }
 
 void DungeonMap::makeHallway( int direction, size_t x, size_t y, size_t length )
@@ -150,14 +159,14 @@ void DungeonMap::makeHallway( int direction, size_t x, size_t y, size_t length )
 	switch( direction )
 	{
 	case DIRECTION_UP:
-		for( i = x, j = y, c = 0; c < length; c++, j++ )
+		for( i = x, j = y, c = 0; c < length; c++, j-- )
 		{
 			getTile( i, j ) = TILE_FLOOR;
 		}
 		break;
 
 	case DIRECTION_DOWN:
-		for( i = x, j = y, c = 0; c < length; c++, j-- )
+		for( i = x, j = y, c = 0; c < length; c++, j++ )
 		{
 			getTile( i, j ) = TILE_FLOOR;
 		}
@@ -194,4 +203,68 @@ sf::Vector2f DungeonMap::getPlayerSpawn()
 			}
 		}
 	}
+}
+
+sf::IntRect DungeonMap::generateRooms( sf::IntRect start, size_t depth, int oldDir )
+{
+	if( depth == 0 )
+	{
+		return sf::IntRect();
+	}
+
+	size_t	roomWidth  = 11;
+	size_t	roomHeight = 11;
+	size_t	hallWidth  = 2;
+	size_t	hallLen	   = 10;
+
+	sf::Vector2i roomStart;
+	sf::Vector2i hallStart;
+
+	std::uniform_int_distribution<int> dirRand( 0, 3 );
+
+	int direction = dirRand( gRanNumGen );
+
+	while( direction == oldDir )
+	{
+		direction = dirRand( gRanNumGen );
+	}
+
+	switch( direction )
+	{
+	case DIRECTION_RIGHT:
+		hallStart.x = start.left + start.width;
+		hallStart.y = start.top + ( start.height / 2 );
+		makeSquare( TILE_FLOOR, hallStart.x, hallStart.y, hallLen, hallWidth );
+		roomStart.x = hallStart.x + hallLen;
+		roomStart.y = start.top;
+		break;
+
+	case DIRECTION_LEFT:
+		hallStart.x = start.left - hallLen;
+		hallStart.y = start.top + ( start.height / 2 );
+		makeSquare( TILE_FLOOR, hallStart.x, hallStart.y, hallLen, hallWidth );
+		roomStart.x = hallStart.x - hallLen;
+		roomStart.y = start.top;
+		break;
+
+	case DIRECTION_UP:
+		hallStart.x = start.left + ( start.width / 2 );
+		hallStart.y = start.top - hallLen;
+		makeSquare( TILE_FLOOR, hallStart.x, hallStart.y, hallWidth, hallLen );
+		roomStart.x = start.left;
+		roomStart.y = hallStart.y - hallLen;
+		break;
+
+	case DIRECTION_DOWN:
+		hallStart.x = start.left + ( start.width / 2 );
+		hallStart.y = start.top + hallLen;
+		makeSquare( TILE_FLOOR, hallStart.x, hallStart.y, hallWidth, hallLen );
+		roomStart.x = start.left;
+		roomStart.y = hallStart.y + hallLen;
+		break;
+	}
+
+	makeSquare( TILE_FLOOR, roomStart.x, roomStart.y, roomWidth, roomHeight );
+
+	return generateRooms( sf::IntRect( roomStart, sf::Vector2i( roomWidth, roomHeight ) ), --depth, direction );
 }

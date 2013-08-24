@@ -1,5 +1,5 @@
 CC = g++
-CPPFLAGS = -g
+CPPFLAGS = -std=c++11 -g
 LINK = -lsfml-graphics -lsfml-window -lsfml-system
 VPATH = src/
 OUT = bin/

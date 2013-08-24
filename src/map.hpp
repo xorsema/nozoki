@@ -27,6 +27,8 @@
 #ifndef MAP_HPP
 #define MAP_HPP
 
+extern std::mt19937 gRanNumGen;
+
 enum {
 	TILE_NONE = 0,
 	TILE_FLOOR,
@@ -70,7 +72,8 @@ public:
 	sf::Vector2f getPlayerSpawn();
 
 private:
-	void makeSpawnRoom( size_t, size_t, size_t, size_t );
+	sf::IntRect generateRooms( sf::IntRect, size_t, int );
+	sf::IntRect makeSpawnRoom( size_t, size_t, size_t, size_t );
 	void makeHallway( int, size_t, size_t, size_t );
 
 	sf::Texture	mFloorTexture;

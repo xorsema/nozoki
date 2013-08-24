@@ -96,6 +96,7 @@ void NozokiState::initState()
 	mPlayer.loadResources();
 	mPlayer.setPosition( mMap.getPlayerSpawn() );
 	mView.reset( sf::FloatRect( 0, 0, 800, 600 ) );
+	mView.zoom( 1.0f );
 }
 
 //Called by the game object every frame
@@ -142,7 +143,7 @@ void NozokiState::handleInput()
 		}
 	
 		mPlayer.handleEvent( event );
-		for( std::vector<Entity*>::iterator it = mEntities.begin(); it != mEntities.end(); it++ )
+		for( auto it = mEntities.begin(); it != mEntities.end(); it++ )
 		{
 			( *it )->handleEvent( event );
 		}
