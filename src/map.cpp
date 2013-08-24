@@ -287,7 +287,7 @@ sf::IntRect DungeonMap::generateRooms( sf::IntRect start, size_t depth )
 		break;
 	}
 
-	if( !isSquareEmpty( hallStart.x, hallStart.y, targetHallWidth, targetHallHeight ) &&
+	if( !isSquareEmpty( hallStart.x, hallStart.y, targetHallWidth, targetHallHeight ) ||
 	    !isSquareEmpty( roomStart.x, roomStart.y, roomWidth, roomHeight ) )
 	{
 		return generateRooms( start, depth );
