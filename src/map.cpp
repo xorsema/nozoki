@@ -40,6 +40,7 @@ Map::Map( size_t w, size_t h, size_t ts )
 	mTileSize = ts;
 
 	mMapTexture.create( w * mTileSize, h * mTileSize);
+	mMapTexture.clear( sf::Color::Black );
 
 	mMapData = new sf::Uint8[mWidth * mHeight];
 	std::memset( mMapData, 0, mWidth * mHeight );
@@ -58,15 +59,20 @@ sf::Uint8& Map::getTile( size_t x, size_t y ) const
 //Make a square of tiles in our map
 void Map::makeSquare( sf::Uint8 type, size_t x, size_t y, size_t w, size_t h )
 {
-	int i, j;
+	int i, j, ci, cj;
 
-	for( i = x; i < w; i++ )
+	for( i = x, ci = 0; ci < w; i++, ci++ )
 	{
-		for( j = y; j < h; j++ )
+		for( j = y, cj = 0; cj < h; j++, cj++ )
 		{
 			getTile( i, j ) = type;
 		}
 	}
+}
+
+void Map::makeCenteredSquare( sf::Uint8 type, size_t x, size_t y, size_t w, size_t h )
+{
+	makeSquare( type, x - ( w / 2 ), y - ( h / 2 ), w, h );
 }
 
 //Render the tiles to a RenderTexture
@@ -101,12 +107,12 @@ sf::Vector2f Map::getTileCoordForPoint( sf::Vector2f point )
 bool Map::collidesWithTile( sf::FloatRect other, size_t x, size_t y )
 {
 	sf::FloatRect tile( sf::Vector2f( mTileSize * x, mTileSize * y ), 
-		   sf::Vector2f( mTileSize, mTileSize ) );
+			    sf::Vector2f( mTileSize, mTileSize ) );
 
 	return tile.intersects( other );
 }
 
-DungeonMap::DungeonMap() : Map( 64, 64, 16 )
+DungeonMap::DungeonMap() : Map( 512, 512, 16 )
 {
 	if( !mFloorTexture.loadFromFile( "res/basictiles.png", sf::IntRect( 6 * 16, 1 * 16, 16, 16 ) ) )
 	{
@@ -118,9 +124,8 @@ DungeonMap::DungeonMap() : Map( 64, 64, 16 )
 		std::cout << "Error loading floor texture from res/basictiles.png!" << std::endl;
 	}
 
-	makeSquare( TILE_FLOOR, 5, 5, 10, 10 );
-	getTile( 6, 6 ) = TILE_PLAYER_SPAWN;
-	
+	makeSpawnRoom( 256, 256, 40, 20 );
+
 	drawTiles( mMapTexture, sf::Sprite( mFloorTexture ), TILE_FLOOR );
 	drawTiles( mMapTexture, sf::Sprite( mPlayerSpawnTexture ), TILE_PLAYER_SPAWN );
 	mMapSprite.setTexture( mMapTexture.getTexture() );
@@ -129,6 +134,49 @@ DungeonMap::DungeonMap() : Map( 64, 64, 16 )
 sf::Sprite& DungeonMap::getSprite()
 {
 	return mMapSprite;
+}
+
+void DungeonMap::makeSpawnRoom( size_t x, size_t y, size_t w, size_t h )
+{
+	makeSquare( TILE_FLOOR, x, y, w, h );
+	
+	getTile( x + ( w / 2 ), y + ( h / 2 ) ) = TILE_PLAYER_SPAWN; 
+}
+
+void DungeonMap::makeHallway( int direction, size_t x, size_t y, size_t length )
+{
+	int i, j, c;
+
+	switch( direction )
+	{
+	case DIRECTION_UP:
+		for( i = x, j = y, c = 0; c < length; c++, j++ )
+		{
+			getTile( i, j ) = TILE_FLOOR;
+		}
+		break;
+
+	case DIRECTION_DOWN:
+		for( i = x, j = y, c = 0; c < length; c++, j-- )
+		{
+			getTile( i, j ) = TILE_FLOOR;
+		}
+		break;
+
+	case DIRECTION_RIGHT:
+		for( i = x, j = y, c = 0; c < length; c++, i++ )
+		{
+			getTile( i, j ) = TILE_FLOOR;
+		}
+		break;
+
+	case DIRECTION_LEFT:
+		for( i = x, j = y, c = 0; c < length; c++, i-- )
+		{
+			getTile( i, j ) = TILE_FLOOR;
+		}
+		break;
+	}
 }
 
 //Get the first player spawn in the map from bottom to top

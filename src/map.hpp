@@ -42,6 +42,7 @@ public:
 	~Map();
 	sf::Uint8& getTile( size_t, size_t ) const;
 	void		makeSquare( sf::Uint8, size_t, size_t, size_t, size_t );
+	void		makeCenteredSquare( sf::Uint8, size_t, size_t, size_t, size_t );
 	virtual sf::Sprite& getSprite() = 0;
 	void		drawTiles( sf::RenderTexture&, sf::Sprite, sf::Uint8 );
 	sf::Vector2f	getTileCoordForPoint( sf::Vector2f );
@@ -69,6 +70,9 @@ public:
 	sf::Vector2f getPlayerSpawn();
 
 private:
+	void makeSpawnRoom( size_t, size_t, size_t, size_t );
+	void makeHallway( int, size_t, size_t, size_t );
+
 	sf::Texture	mFloorTexture;
 	sf::Texture	mPlayerSpawnTexture;
 };
