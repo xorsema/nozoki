@@ -280,9 +280,13 @@ sf::IntRect DungeonMap::generateRooms( sf::IntRect start, size_t depth )
 	size_t targetHallWidth;
 	size_t targetHallHeight;
 
-	std::uniform_int_distribution<int> dirRand( 0, 3 );
+	sf::IntRect result;
 
-	int direction = dirRand( gRanNumGen );
+	std::uniform_int_distribution<int> dirRand( 0, 3 );
+	std::uniform_int_distribution<int> subDepthRand( 0, 5 );
+
+	int	direction = dirRand( gRanNumGen );
+	int	subDepth  = subDepthRand( gRanNumGen );
 
 	switch( direction )
 	{
@@ -338,5 +342,9 @@ sf::IntRect DungeonMap::generateRooms( sf::IntRect start, size_t depth )
 	makeSquare( TILE_FLOOR, hallStart.x, hallStart.y, targetHallWidth, targetHallHeight );
 	makeSquare( TILE_FLOOR, roomStart.x, roomStart.y, roomWidth, roomHeight );
 
-	return generateRooms( sf::IntRect( roomStart, sf::Vector2i( roomWidth, roomHeight ) ), --depth );
+	result = sf::IntRect( roomStart, sf::Vector2i( roomWidth, roomHeight ) );
+
+	generateRooms( result, subDepth );
+	
+	return generateRooms( result, --depth );
 }
