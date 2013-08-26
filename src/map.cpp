@@ -35,7 +35,6 @@
 #include "entity.hpp"
 #include "map.hpp"
 
-//RNG
 std::mt19937 gRanNumGen;
 
 Map::Map( size_t w, size_t h, size_t ts )
@@ -158,6 +157,14 @@ bool Map::isTouchingTileType( sf::Uint8 type, sf::FloatRect AABB )
 	}
 
 	return false;
+}
+
+bool Map::isInsideMap( sf::FloatRect AABB )
+{
+	return !( AABB.top > mHeight * mTileSize ||
+		  AABB.left < 0 ||
+		  AABB.left + AABB.width > mWidth * mTileSize ||
+		  AABB.top + AABB.height < 0 );
 }
 
 DungeonMap::DungeonMap() : Map( 512, 512, 16 )
@@ -316,10 +323,16 @@ sf::IntRect DungeonMap::generateRooms( sf::IntRect start, size_t depth )
 		break;
 	}
 
+	if( !isInsideMap( sf::FloatRect( hallStart.x * mTileSize, hallStart.y * mTileSize, targetHallWidth * mTileSize, targetHallHeight * mTileSize ) ) ||
+	    !isInsideMap( sf::FloatRect( roomStart.x, roomStart.y, roomWidth, roomHeight ) ) )	
+	{
+		return start;
+	}
+
 	if( !isSquareEmpty( hallStart.x, hallStart.y, targetHallWidth, targetHallHeight ) ||
 	    !isSquareEmpty( roomStart.x, roomStart.y, roomWidth, roomHeight ) )
 	{
-		return generateRooms( start, depth );
+		return generateRooms( start, --depth );
 	}
 
 	makeSquare( TILE_FLOOR, hallStart.x, hallStart.y, targetHallWidth, targetHallHeight );

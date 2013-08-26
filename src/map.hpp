@@ -29,6 +29,7 @@
 
 extern std::mt19937 gRanNumGen;
 
+
 enum {
 	TILE_NONE = 0,
 	TILE_FLOOR,
@@ -56,6 +57,7 @@ public:
 	bool isSquareEmpty( size_t, size_t, size_t, size_t );
 	bool isTouchingTileType( sf::Uint8, sf::FloatRect );
 	sf::Vector2f getCoordForTile( size_t, size_t );
+	bool isInsideMap( sf::FloatRect );
 
 protected:
 	sf::Uint8		*mMapData;
