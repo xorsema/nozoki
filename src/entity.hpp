@@ -118,9 +118,10 @@ public:
 	virtual void update( GameState * );
 
 private:
-	sf::Texture	mTexture;
-	Animation	mWalkAnim;
-	sf::Sprite	mIdleSprite;
+	static sf::Texture	mTexture;
+	static bool		mTextureInit;
+	Animation		mWalkAnim;
+	sf::Sprite		mIdleSprite;
 };
 
 #endif

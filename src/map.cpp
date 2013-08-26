@@ -99,12 +99,17 @@ void Map::drawTiles( sf::RenderTexture& dst, sf::Sprite src, sf::Uint8 type )
 }
 
 //Get the tile enclosing the given coordinate
-sf::Vector2f Map::getTileCoordForPoint( sf::Vector2f point )
+sf::Vector2i Map::getTileCoordForPoint( sf::Vector2f point )
 {
 	size_t x = (size_t)point.x;
 	size_t y = (size_t)point.y;
 
-	return sf::Vector2f( x / mTileSize, y / mTileSize );
+	return sf::Vector2i( x / mTileSize, y / mTileSize );
+}
+
+sf::Uint8 Map::getTileForPoint( sf::Vector2f point )
+{
+	return getTile( ( (size_t)point.x ) / mTileSize, ( (size_t)point.y ) / mTileSize );
 }
 
 sf::Vector2f Map::getCoordForTile( size_t x, size_t y )
@@ -142,18 +147,12 @@ bool Map::isSquareEmpty( size_t x, size_t y, size_t w, size_t h )
 
 bool Map::isTouchingTileType( sf::Uint8 type, sf::FloatRect AABB )
 {
-	int i, j;
-
-	for( i = 0; i < mWidth; i++ )
+	if( getTileForPoint( sf::Vector2f( AABB.left, AABB.top ) ) == type ||
+	    getTileForPoint( sf::Vector2f( AABB.left + AABB.width, AABB.top ) ) == type ||
+	    getTileForPoint( sf::Vector2f( AABB.left, AABB.top + AABB.height ) ) == type ||
+	    getTileForPoint( sf::Vector2f( AABB.left + AABB.width, AABB.top + AABB.height ) ) == type )
 	{
-		for( j = 0; j < mHeight; j++ )
-		{
-			if( getTile( i, j ) == type && 
-			    collidesWithTile( AABB, i, j ) )
-			{
-				return true;
-			}
-		}
+		return true;
 	}
 
 	return false;
@@ -262,6 +261,19 @@ sf::Vector2f DungeonMap::getPlayerSpawn()
 	}
 }
 
+void DungeonMap::furnishRoom( sf::IntRect room, bool placeExit )
+{
+	int i;
+	std::uniform_int_distribution<int> enemyAmount( 0, 5 );
+	std::uniform_int_distribution<int> enemyX( 0, room.width - 1 );
+	std::uniform_int_distribution<int> enemyY( 0, room.height - 1 );
+
+	for( i = 0; i < enemyAmount( gRanNumGen ); i++ )
+	{
+		getTile( room.left + enemyX( gRanNumGen ), room.top + enemyY( gRanNumGen ) ) = TILE_ENEMY_SPAWN;
+	}
+}
+
 sf::IntRect DungeonMap::generateRooms( sf::IntRect start, size_t depth )
 {
 	if( depth == 0 )
@@ -343,6 +355,7 @@ sf::IntRect DungeonMap::generateRooms( sf::IntRect start, size_t depth )
 	makeSquare( TILE_FLOOR, roomStart.x, roomStart.y, roomWidth, roomHeight );
 
 	result = sf::IntRect( roomStart, sf::Vector2i( roomWidth, roomHeight ) );
+	furnishRoom( result, false );
 
 	generateRooms( result, subDepth );
 	

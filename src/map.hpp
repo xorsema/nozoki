@@ -48,7 +48,8 @@ public:
 	void		makeCenteredSquare( sf::Uint8, size_t, size_t, size_t, size_t );
 	virtual sf::Sprite& getSprite() = 0;
 	void		drawTiles( sf::RenderTexture&, sf::Sprite, sf::Uint8 );
-	sf::Vector2f	getTileCoordForPoint( sf::Vector2f );
+	sf::Vector2i	getTileCoordForPoint( sf::Vector2f );
+	sf::Uint8 getTileForPoint( sf::Vector2f );
 	bool		collidesWithTile( sf::FloatRect, size_t, size_t );
 	size_t getWidth() { return mWidth; }
 	size_t getHeight() { return mHeight; }
@@ -78,6 +79,7 @@ public:
 
 private:
 	sf::IntRect generateRooms( sf::IntRect, size_t );
+	void furnishRoom( sf::IntRect, bool );
 	sf::IntRect makeSpawnRoom( size_t, size_t, size_t, size_t );
 	void makeHallway( int, size_t, size_t, size_t );
 

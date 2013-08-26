@@ -108,6 +108,16 @@ void Player::update( GameState *gs )
 	NozokiState *state = (NozokiState*)gs;
 
 	//Do movement
+	if( !sf::Keyboard::isKeyPressed( sf::Keyboard::Up) &&
+	    !sf::Keyboard::isKeyPressed( sf::Keyboard::Down ) &&
+	    !sf::Keyboard::isKeyPressed( sf::Keyboard::Right ) &&
+	    !sf::Keyboard::isKeyPressed( sf::Keyboard::Left ) )
+	{
+		mVelocity = sf::Vector2f( 0, 0 );
+		setState( PLAYER_IDLE );
+		
+	}
+
 	if( sf::Keyboard::isKeyPressed( sf::Keyboard::Right ) &&
 	    !sf::Keyboard::isKeyPressed( sf::Keyboard::Left ) )
 	{
@@ -138,16 +148,6 @@ void Player::update( GameState *gs )
 		setState( PLAYER_WALKING );
 		mDirection = DIRECTION_DOWN;
 		mVelocity = sf::Vector2f( 0, mWalkSpeed );
-	}
-
-	if( !sf::Keyboard::isKeyPressed( sf::Keyboard::Up) &&
-	    !sf::Keyboard::isKeyPressed( sf::Keyboard::Down ) &&
-	    !sf::Keyboard::isKeyPressed( sf::Keyboard::Right ) &&
-	    !sf::Keyboard::isKeyPressed( sf::Keyboard::Left ) )
-	{
-		mVelocity = sf::Vector2f( 0, 0 );
-		setState( PLAYER_IDLE );
-		
 	}
 
 	//Move only if we won't hit something we shouldn't
@@ -189,10 +189,13 @@ void Player::loadResources()
 						    sf::Sprite( mTexture, sf::IntRect( 1 * 16, 0, 16, 16 ) ) );
 }
 
+bool		Enemy::mTextureInit = false;
+sf::Texture	Enemy::mTexture;
+
 Enemy::Enemy( sf::Vector2f pos )
 {
 	mPosition   = pos;
-	mVelocity.x = 30.0f;
+	mVelocity.x = 50.0f;
 	mVelocity.y = 0.0f;
 	mScale.x    = 16.0f;
 	mScale.y    = 16.0f;
@@ -203,11 +206,14 @@ Enemy::Enemy( sf::Vector2f pos )
 
 void Enemy::loadResources()
 {
-	if( !mTexture.loadFromFile( "res/basictiles.png", sf::IntRect( 0, 12 * 16, 3 * 16, 16 ) ) )
+	if( !mTextureInit )
 	{
-		std::cout << "Error loading textures from res/basictiles.png!" << std::endl;
-	}	
-
+		if( !mTexture.loadFromFile( "res/basictiles.png", sf::IntRect( 0, 12 * 16, 3 * 16, 16 ) ) )
+		{
+			std::cout << "Error loading textures from res/basictiles.png!" << std::endl;
+		}
+		mTextureInit == true;
+	}
 	mWalkAnim = Animation( 300,
 			       sf::Sprite( mTexture, sf::IntRect( 0, 0, 16, 16 ) ),
 			       sf::Sprite( mTexture, sf::IntRect( 16, 0, 16, 16 ) ) );

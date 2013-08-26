@@ -43,7 +43,7 @@ Game::Game() : mNozState( this )
 void Game::openWindow()
 {
 	mWindow = new sf::RenderWindow( sf::VideoMode( mWindowWidth, mWindowHeight ), "nozoki" );
-	mWindow->setVerticalSyncEnabled(false);
+	mWindow->setVerticalSyncEnabled(true);
 }
 
 int GameState::getDelta()
