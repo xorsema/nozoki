@@ -108,6 +108,11 @@ sf::Vector2f Map::getTileCoordForPoint( sf::Vector2f point )
 	return sf::Vector2f( x / mTileSize, y / mTileSize );
 }
 
+sf::Vector2f Map::getCoordForTile( size_t x, size_t y )
+{
+	return sf::Vector2f( x * mTileSize, y * mTileSize );
+}
+
 //AABB test to check collision with a given tile
 bool Map::collidesWithTile( sf::FloatRect other, size_t x, size_t y )
 {
@@ -136,6 +141,25 @@ bool Map::isSquareEmpty( size_t x, size_t y, size_t w, size_t h )
 	return true;
 }
 
+bool Map::isTouchingTileType( sf::Uint8 type, sf::FloatRect AABB )
+{
+	int i, j;
+
+	for( i = 0; i < mWidth; i++ )
+	{
+		for( j = 0; j < mHeight; j++ )
+		{
+			if( getTile( i, j ) == type && 
+			    collidesWithTile( AABB, i, j ) )
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 DungeonMap::DungeonMap() : Map( 512, 512, 16 )
 {
 	gRanNumGen.seed( std::chrono::system_clock::now().time_since_epoch().count() );
@@ -156,7 +180,10 @@ DungeonMap::DungeonMap() : Map( 512, 512, 16 )
 	generateRooms( spawnRect, 10 );
 	generateRooms( spawnRect, 10 );
 
+	getTile( 257, 257 ) = TILE_ENEMY_SPAWN;
+
 	drawTiles( mMapTexture, sf::Sprite( mFloorTexture ), TILE_FLOOR );
+	drawTiles( mMapTexture, sf::Sprite( mFloorTexture ), TILE_ENEMY_SPAWN );
 	drawTiles( mMapTexture, sf::Sprite( mPlayerSpawnTexture ), TILE_PLAYER_SPAWN );
 	mMapSprite.setTexture( mMapTexture.getTexture() );
 }

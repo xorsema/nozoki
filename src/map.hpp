@@ -54,6 +54,8 @@ public:
 	size_t getTileSize() { return mTileSize; }
 	sf::FloatRect getAABB() { return sf::FloatRect( sf::Vector2f( 0, 0 ), sf::Vector2f( mWidth * mTileSize, mHeight * mTileSize ) ); }
 	bool isSquareEmpty( size_t, size_t, size_t, size_t );
+	bool isTouchingTileType( sf::Uint8, sf::FloatRect );
+	sf::Vector2f getCoordForTile( size_t, size_t );
 
 protected:
 	sf::Uint8		*mMapData;

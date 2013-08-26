@@ -103,30 +103,6 @@ sf::Sprite& Player::getSprite()
 	}
 }
 
-void Player::handleEvent( sf::Event e )
-{
-}
-
-//Make sure the player does not go out of bounds, if we're in the bounds, return true
-bool Player::checkCollisions( NozokiState *state )
-{
-	int i, j;
-
-	for( i = 0; i < state->getMap().getWidth(); i++ )
-	{
-		for( j = 0; j < state->getMap().getHeight(); j++ )
-		{
-			if( state->getMap().getTile( i, j ) == TILE_NONE && 
-			    state->getMap().collidesWithTile( sf::FloatRect( mPosition + ( mVelocity * ( state->getDelta() / 1000.0f ) ), mScale ), i, j ) )
-			{
-				return false;
-			}
-		}
-	}
-
-	return true;
-}
-
 void Player::update( GameState *gs )
 {
 	NozokiState *state = (NozokiState*)gs;
@@ -175,7 +151,7 @@ void Player::update( GameState *gs )
 	}
 
 	//Move only if we won't hit something we shouldn't
-	if( checkCollisions( state ) ) 
+	if( !state->getMap().isTouchingTileType( TILE_NONE, sf::FloatRect( mPosition + ( mVelocity * ( state->getDelta() / 1000.0f ) ), mScale ) ) )
 	{
 		mPosition += ( mVelocity * ( state->getDelta() / 1000.0f ) );
 	}
@@ -211,4 +187,93 @@ void Player::loadResources()
 	mWalkingAnims[DIRECTION_DOWN] = Animation( 300, 
 						    sf::Sprite( mTexture, sf::IntRect( 0 * 16, 0, 16, 16 ) ),
 						    sf::Sprite( mTexture, sf::IntRect( 1 * 16, 0, 16, 16 ) ) );
+}
+
+Enemy::Enemy( sf::Vector2f pos )
+{
+	mPosition   = pos;
+	mVelocity.x = 30.0f;
+	mVelocity.y = 0.0f;
+	mScale.x    = 16.0f;
+	mScale.y    = 16.0f;
+	mDirection  = DIRECTION_RIGHT;
+	mState	    = ENEMY_WALKING;
+	loadResources();
+}
+
+void Enemy::loadResources()
+{
+	if( !mTexture.loadFromFile( "res/basictiles.png", sf::IntRect( 0, 12 * 16, 3 * 16, 16 ) ) )
+	{
+		std::cout << "Error loading textures from res/basictiles.png!" << std::endl;
+	}	
+
+	mWalkAnim = Animation( 300,
+			       sf::Sprite( mTexture, sf::IntRect( 0, 0, 16, 16 ) ),
+			       sf::Sprite( mTexture, sf::IntRect( 16, 0, 16, 16 ) ) );
+	mIdleSprite = sf::Sprite( mTexture, sf::IntRect( 0, 0, 16, 16 ) );
+}
+
+sf::Sprite& Enemy::getSprite()
+{
+	switch( mState )
+	{
+	case ENEMY_IDLE:
+		switch( mDirection )
+		{
+		case DIRECTION_RIGHT:
+			mIdleSprite.setScale( -1.0f, 1.0f );
+			mIdleSprite.move( mScale.x, 0 );
+			return mIdleSprite;
+			
+		case DIRECTION_LEFT:
+			return mIdleSprite;
+
+		case DIRECTION_UP:
+			return mIdleSprite;
+
+		case DIRECTION_DOWN:
+			return mIdleSprite;
+		}
+		break;
+
+	case ENEMY_WALKING:
+		switch( mDirection )
+		{
+		case DIRECTION_RIGHT:
+			mWalkAnim.getCurrentFrame().setScale( -1.0f, 1.0f );
+			mWalkAnim.getCurrentFrame().move( mScale.x, 0 );
+			return mWalkAnim.getCurrentFrame();
+			
+		case DIRECTION_LEFT:
+			mWalkAnim.getCurrentFrame().setScale( 1.0f, 1.0f );
+			return mWalkAnim.getCurrentFrame();
+			
+		case DIRECTION_UP:
+			return mWalkAnim.getCurrentFrame();
+			
+		case DIRECTION_DOWN:
+			return mWalkAnim.getCurrentFrame();
+
+		}
+		break;
+	}
+}
+
+void Enemy::update( GameState *gs )
+{
+	NozokiState *state = (NozokiState*)gs;
+	
+	if( state->getMap().isTouchingTileType( TILE_NONE, sf::FloatRect( mPosition + ( mVelocity * ( state->getDelta() / 1000.0f ) ), mScale ) ) )
+	{
+		mDirection = ( mDirection == DIRECTION_RIGHT ) ? DIRECTION_LEFT : DIRECTION_RIGHT;
+		mVelocity.x *= -1;
+		mPosition += ( mVelocity * ( state->getDelta() / 1000.0f ) );
+	} 
+	else
+	{
+		mPosition += ( mVelocity * ( state->getDelta() / 1000.0f ) );
+	}
+
+	getSprite().setPosition( mPosition );
 }

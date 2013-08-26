@@ -36,6 +36,11 @@ enum {
 };
 
 enum {
+	ENEMY_IDLE,
+	ENEMY_WALKING
+};
+
+enum {
 	DIRECTION_RIGHT = 0,
 	DIRECTION_LEFT	= 1,
 	DIRECTION_UP	= 2,
@@ -73,14 +78,16 @@ public:
 	virtual sf::Vector2f getPosition() { return mPosition; }
 	virtual void move( sf::Vector2f offset ) { mPosition += offset; }
 	virtual void handleEvent( sf::Event ) {}
-	virtual sf::FloatRect getAABB() = 0;
+	virtual sf::FloatRect getAABB() { return sf::FloatRect( mPosition,  mScale ); }
 	virtual sf::Vector2f getScale() { return mScale; }
+	virtual sf::Vector2f getVelocity() { return mVelocity; }
 
 protected:
 	int		mState;
 	sf::Vector2f	mPosition;
 	int		mDirection;
 	sf::Vector2f	mScale;
+	sf::Vector2f	mVelocity;
 };
 
 //Our player
@@ -90,21 +97,30 @@ public:
 	Player();
 	void		update( GameState * );
 	sf::Sprite& getSprite();
-	void handleEvent( sf::Event );
 	void loadResources();
 	void setState( int state ) { mState = state; }
 	void setVelocity( sf::Vector2f vel ) { mVelocity = vel; }
 	sf::Vector2f getVelocity() { return mVelocity; }
-	sf::FloatRect getAABB() { return sf::FloatRect( mPosition,  mScale ); }
 	int mWalkSpeed;
  
 private:
-	bool checkCollisions( NozokiState* );
-
 	sf::Texture	mTexture;
 	sf::Sprite	mIdleSprites[4];
 	Animation	mWalkingAnims[4];
-	sf::Vector2f	mVelocity;
+};
+
+class Enemy : public Entity
+{
+public:
+	Enemy( sf::Vector2f );
+	virtual sf::Sprite& getSprite();
+	virtual void loadResources();
+	virtual void update( GameState * );
+
+private:
+	sf::Texture	mTexture;
+	Animation	mWalkAnim;
+	sf::Sprite	mIdleSprite;
 };
 
 #endif

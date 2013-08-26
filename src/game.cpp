@@ -95,6 +95,7 @@ void NozokiState::initState()
 {
 	mPlayer.loadResources();
 	mPlayer.setPosition( mMap.getPlayerSpawn() );
+	spawnEnemies();
 	mView.reset( sf::FloatRect( 0, 0, 800, 600 ) );
 	mView.zoom( 1.0f );
 }
@@ -112,7 +113,7 @@ void NozokiState::doFrame()
 	mParent->mWindow->draw( mMap.getSprite() );
 
 	//Update and draw all the other entities
-	for( std::vector<Entity*>::iterator it = mEntities.begin(); it != mEntities.end(); it++ )
+	for( auto it = mEntities.begin(); it != mEntities.end(); it++ )
 	{
 		( *it )->update( this );
 		mParent->mWindow->draw( ( *it )->getSprite() );
@@ -146,6 +147,22 @@ void NozokiState::handleInput()
 		for( auto it = mEntities.begin(); it != mEntities.end(); it++ )
 		{
 			( *it )->handleEvent( event );
+		}
+	}
+}
+
+void NozokiState::spawnEnemies()
+{
+	int i, j;
+
+	for( i = 0; i < mMap.getWidth(); i++ )
+	{
+		for( j = 0; j < mMap.getHeight(); j++ )
+		{
+			if( mMap.getTile( i, j ) == TILE_ENEMY_SPAWN )
+			{
+				mEntities.push_back( new Enemy( mMap.getCoordForTile( i, j ) ) );
+			}
 		}
 	}
 }

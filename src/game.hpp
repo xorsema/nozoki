@@ -53,6 +53,7 @@ public:
 	virtual void initState();
 	virtual void doFrame();
 	DungeonMap& getMap() { return mMap; }
+	void spawnEnemies();
 
 private:
 	std::vector<Entity*>	mEntities;
