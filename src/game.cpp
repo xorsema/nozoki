@@ -161,7 +161,7 @@ void NozokiState::spawnEnemies()
 		{
 			if( mMap.getTile( i, j ) == TILE_ENEMY_SPAWN )
 			{
-				mEntities.push_back( new Enemy( mMap.getCoordForTile( i, j ) ) );
+				mEntities.push_back( new Slime( mMap.getCoordForTile( i, j ) ) );
 			}
 		}
 	}

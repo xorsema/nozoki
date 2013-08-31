@@ -37,7 +37,8 @@ enum {
 
 enum {
 	ENEMY_IDLE,
-	ENEMY_WALKING
+	ENEMY_WALKING,
+	ENEMY_CHASING
 };
 
 enum {
@@ -45,6 +46,19 @@ enum {
 	DIRECTION_LEFT	= 1,
 	DIRECTION_UP	= 2,
 	DIRECTION_DOWN	= 3
+};
+
+class Delay
+{
+public:
+	Delay( sf::Time );
+	bool elapsed();
+	void reset();
+	void setDuration( sf::Time );
+
+private:
+	sf::Time mDuration;
+	sf::Clock mClock;
 };
 
 //Base animation class, takes a sequence of sprites and will return the appropriate one
@@ -109,10 +123,10 @@ private:
 	Animation	mWalkingAnims[4];
 };
 
-class Enemy : public Entity
+class Slime : public Entity
 {
 public:
-	Enemy( sf::Vector2f );
+	Slime( sf::Vector2f );
 	virtual sf::Sprite& getSprite();
 	virtual void loadResources();
 	virtual void update( GameState * );
@@ -120,8 +134,10 @@ public:
 private:
 	static sf::Texture	mTexture;
 	static bool		mTextureInit;
+	static float		mSpeed;
 	Animation		mWalkAnim;
 	sf::Sprite		mIdleSprite;
+	Delay			mMoveDelay;
 };
 
 #endif

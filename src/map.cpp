@@ -160,10 +160,10 @@ bool Map::isTouchingTileType( sf::Uint8 type, sf::FloatRect AABB )
 
 bool Map::isInsideMap( sf::FloatRect AABB )
 {
-	return !( AABB.top > mHeight * mTileSize ||
+	return !( AABB.top + AABB.height > mHeight * mTileSize ||
 		  AABB.left < 0 ||
 		  AABB.left + AABB.width > mWidth * mTileSize ||
-		  AABB.top + AABB.height < 0 );
+		  AABB.top < 0 );
 }
 
 DungeonMap::DungeonMap() : Map( 512, 512, 16 )
@@ -185,8 +185,6 @@ DungeonMap::DungeonMap() : Map( 512, 512, 16 )
 	generateRooms( spawnRect, 10 );
 	generateRooms( spawnRect, 10 );
 	generateRooms( spawnRect, 10 );
-
-	getTile( 257, 257 ) = TILE_ENEMY_SPAWN;
 
 	drawTiles( mMapTexture, sf::Sprite( mFloorTexture ), TILE_FLOOR );
 	drawTiles( mMapTexture, sf::Sprite( mFloorTexture ), TILE_ENEMY_SPAWN );

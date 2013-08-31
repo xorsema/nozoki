@@ -34,6 +34,26 @@
 #include "entity.hpp"
 #include "game.hpp"
 
+Delay::Delay( sf::Time time )
+{
+	mDuration = time;
+}
+
+bool Delay::elapsed()
+{
+	return ( mClock.getElapsedTime() >= mDuration );
+}
+
+void Delay::setDuration( sf::Time time )
+{
+	mDuration = time;
+}
+
+void Delay::reset()
+{
+	mClock.restart();
+}
+
 Animation::Animation( int delay )
 {
 	setDelay( delay );
@@ -189,22 +209,24 @@ void Player::loadResources()
 						    sf::Sprite( mTexture, sf::IntRect( 1 * 16, 0, 16, 16 ) ) );
 }
 
-bool		Enemy::mTextureInit = false;
-sf::Texture	Enemy::mTexture;
+bool		Slime::mTextureInit = false;
+sf::Texture	Slime::mTexture;
+float		Slime::mSpeed	    = 30.0f;
 
-Enemy::Enemy( sf::Vector2f pos )
+Slime::Slime( sf::Vector2f pos ) :
+	mMoveDelay( sf::seconds( 3.0f ) )
 {
 	mPosition   = pos;
-	mVelocity.x = 50.0f;
+	mVelocity.x = 0.0f;
 	mVelocity.y = 0.0f;
 	mScale.x    = 16.0f;
 	mScale.y    = 16.0f;
-	mDirection  = DIRECTION_RIGHT;
-	mState	    = ENEMY_WALKING;
+	mDirection  = DIRECTION_LEFT;
+	mState	    = ENEMY_IDLE;
 	loadResources();
 }
 
-void Enemy::loadResources()
+void Slime::loadResources()
 {
 	if( !mTextureInit )
 	{
@@ -220,7 +242,7 @@ void Enemy::loadResources()
 	mIdleSprite = sf::Sprite( mTexture, sf::IntRect( 0, 0, 16, 16 ) );
 }
 
-sf::Sprite& Enemy::getSprite()
+sf::Sprite& Slime::getSprite()
 {
 	switch( mState )
 	{
@@ -229,10 +251,10 @@ sf::Sprite& Enemy::getSprite()
 		{
 		case DIRECTION_RIGHT:
 			mIdleSprite.setScale( -1.0f, 1.0f );
-			mIdleSprite.move( mScale.x, 0 );
 			return mIdleSprite;
 			
 		case DIRECTION_LEFT:
+			mIdleSprite.setScale( 1.0f, 1.0f );
 			return mIdleSprite;
 
 		case DIRECTION_UP:
@@ -248,7 +270,6 @@ sf::Sprite& Enemy::getSprite()
 		{
 		case DIRECTION_RIGHT:
 			mWalkAnim.getCurrentFrame().setScale( -1.0f, 1.0f );
-			mWalkAnim.getCurrentFrame().move( mScale.x, 0 );
 			return mWalkAnim.getCurrentFrame();
 			
 		case DIRECTION_LEFT:
@@ -266,20 +287,61 @@ sf::Sprite& Enemy::getSprite()
 	}
 }
 
-void Enemy::update( GameState *gs )
+void Slime::update( GameState *gs )
 {
 	NozokiState *state = (NozokiState*)gs;
-	
-	if( state->getMap().isTouchingTileType( TILE_NONE, sf::FloatRect( mPosition + ( mVelocity * ( state->getDelta() / 1000.0f ) ), mScale ) ) )
+
+	std::uniform_int_distribution<int> dirRand( 0, 3 );
+	std::uniform_int_distribution<int> delayRand( 1, 5 );
+
+	switch( mState )
 	{
-		mDirection = ( mDirection == DIRECTION_RIGHT ) ? DIRECTION_LEFT : DIRECTION_RIGHT;
-		mVelocity.x *= -1;
+	case ENEMY_IDLE:
+		if( mMoveDelay.elapsed() )
+		{
+			mMoveDelay.reset();
+			mState = ENEMY_WALKING;
+			mDirection = dirRand( gRanNumGen );
+
+			switch( mDirection )
+			{
+			case DIRECTION_RIGHT:
+				mVelocity.x = mSpeed;
+				break;
+
+			case DIRECTION_LEFT:
+				mVelocity.x = -mSpeed;
+				break;
+				
+			case DIRECTION_UP:
+				mVelocity.y = mSpeed;
+				break;
+				
+			case DIRECTION_DOWN:
+				mVelocity.y = -mSpeed;
+				break;
+			}
+		}
+		break;
+
+	case ENEMY_WALKING:
+		if( mMoveDelay.elapsed() )
+		{
+			mMoveDelay.reset();
+			mMoveDelay.setDuration( sf::seconds( delayRand( gRanNumGen ) ) );
+			mVelocity = sf::Vector2f( 0, 0 );
+			mState = ENEMY_IDLE;
+		}
+		break;
+	}
+	
+	sf::FloatRect aabb( mPosition + ( mVelocity * ( state->getDelta() / 1000.0f ) ), mScale );
+
+	if( state->getMap().isInsideMap( aabb ) && !state->getMap().isTouchingTileType( TILE_NONE, aabb ) )
+	{
 		mPosition += ( mVelocity * ( state->getDelta() / 1000.0f ) );
 	} 
-	else
-	{
-		mPosition += ( mVelocity * ( state->getDelta() / 1000.0f ) );
-	}
-
+	
 	getSprite().setPosition( mPosition );
 }
+
